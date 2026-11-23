@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Observatorio Cielo Abierto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --noche:#0e1330;
+    --medianoche:#1a2150;
+    --luna:#f3ecd8;
+    --ambar:#ffb84d;
+    --niebla:#9aa4d6;
+    --titulo:'Bricolage Grotesque','Segoe UI',sans-serif;
+    --texto:'Newsreader',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--texto);font-size:1.15rem;line-height:1.65;
+    color:var(--luna);background:var(--noche);
+  }
+  /* FONDO: degradado + canvas de estrellas */
+  .fondo{position:fixed;inset:0;z-index:-2;
+    background:radial-gradient(ellipse at 20% 0%,#2b3480 0%,transparent 55%),
+               radial-gradient(ellipse at 90% 100%,#3a1f5c 0%,transparent 50%),var(--noche);}
+  #estrellas{position:fixed;inset:0;z-index:-1;width:100%;height:100%}
+
+  /* ENCABEZADO */
+  header{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:.9rem 5vw;background:rgba(14,19,48,.72);backdrop-filter:blur(8px);border-bottom:1px solid rgba(243,236,216,.12)}
+  .logo{font-family:var(--titulo);font-weight:800;font-size:1.2rem;color:var(--luna);text-decoration:none}
+  nav{display:flex;gap:1.5rem}
+  nav a{color:var(--niebla);text-decoration:none;font-family:var(--titulo);font-weight:500;font-size:.98rem}
+  nav a:hover,nav a:focus-visible{color:var(--ambar)}
+  a:focus-visible,button:focus-visible,input:focus-visible,.tab:focus-visible{outline:3px solid var(--ambar);outline-offset:3px;border-radius:4px}
+
+  /* SECCIONES */
+  section{padding:5.5rem 5vw;max-width:1100px;margin:0 auto}
+  h1,h2,h3{font-family:var(--titulo);line-height:1.1}
+  h1{font-size:clamp(2.6rem,7vw,5.4rem);font-weight:800;max-width:14ch}
+  h2{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:700;margin-bottom:1rem}
+  p{max-width:62ch}
+  .hero{min-height:52vh;padding-bottom:2rem;display:flex;flex-direction:column;justify-content:center;gap:1.6rem}
+  .hero p{color:var(--niebla);font-size:1.3rem}
+  .boton{display:inline-block;align-self:flex-start;background:var(--ambar);color:#241600;border:0;
+    font-family:var(--titulo);font-weight:700;font-size:1rem;padding:.85rem 1.6rem;border-radius:999px;
+    cursor:pointer;text-decoration:none;transition:transform .15s}
+  .boton:hover{transform:translateY(-2px)}
+  .boton:active{transform:scale(.97)}
+
+  /* PLANETAS: pestañas */
+  .tabs{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.5rem 0}
+  .tab{font-family:var(--titulo);font-weight:500;font-size:1rem;padding:.55rem 1.1rem;border-radius:999px;
+    border:1px solid rgba(243,236,216,.3);background:transparent;color:var(--luna);cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--luna);color:var(--noche);border-color:var(--luna)}
+  .panel{display:grid;grid-template-columns:200px 1fr;gap:2rem;align-items:center;
+    background:rgba(26,33,80,.55);border:1px solid rgba(243,236,216,.12);border-radius:20px;padding:2rem}
+  .orbe{width:180px;height:180px;border-radius:50%;transition:background .4s, box-shadow .4s;
+    box-shadow:inset -22px -18px 40px rgba(0,0,0,.55),0 0 40px rgba(255,184,77,.12)}
+  .panel h3{font-size:1.8rem;margin-bottom:.4rem}
+  .panel .dato{color:var(--ambar);font-family:var(--titulo);font-weight:500;margin-top:.8rem}
+
+  /* LUNA */
+  .luna{display:grid;grid-template-columns:200px 1fr;gap:2rem;align-items:center}
+  .luna svg{width:180px;height:180px}
+  .control{display:flex;flex-direction:column;gap:.8rem}
+  #nombreFase{font-family:var(--titulo);font-size:1.6rem;font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--ambar)}
+
+  /* BITÁCORA */
+  .form{display:flex;gap:.7rem;flex-wrap:wrap;margin:1.2rem 0}
+  .form input{flex:1;min-width:220px;padding:.8rem 1rem;border-radius:12px;border:1px solid rgba(243,236,216,.3);
+    background:rgba(14,19,48,.7);color:var(--luna);font-family:var(--texto);font-size:1.05rem}
+  ul{list-style:none;display:grid;gap:.6rem;max-width:640px}
+  li{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.8rem 1rem;
+    background:rgba(26,33,80,.55);border-radius:12px;border:1px solid rgba(243,236,216,.1)}
+  li button{background:none;border:0;color:var(--niebla);cursor:pointer;font-family:var(--titulo);font-size:.9rem}
+  li button:hover{color:var(--ambar)}
+  .vacio{color:var(--niebla);font-style:italic}
+
+  footer{text-align:center;padding:3rem 5vw;color:var(--niebla);font-size:.95rem}
+
+  @media (max-width:700px){
+    nav{gap:.9rem}
+    .panel,.luna{grid-template-columns:1fr;justify-items:center;text-align:center}
+    section{padding:4rem 6vw}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="fondo"></div>
+<canvas id="estrellas" aria-hidden="true"></canvas>
+
+<header>
+  <a class="logo" href="#inicio">Cielo Abierto</a>
+  <nav aria-label="Principal">
+    <a href="#planetas">Planetas</a>
+    <a href="#luna">Luna</a>
+    <a href="#bitacora">Bitácora</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" id="inicio">
+    <h1>Mira hacia arriba esta noche.</h1>
+    <p>Una guía sencilla para reconocer planetas, seguir la Luna y anotar lo que ves. Mueve el mouse: las estrellas te siguen.</p>
+    <a class="boton" href="#planetas">Empezar a explorar</a>
+  </section>
+
+  <section id="planetas">
+    <h2>Planetas que puedes ver</h2>
+    <p>Elige un planeta para leer un dato que te ayude a reconocerlo.</p>
+    <div class="tabs" role="tablist" aria-label="Planetas"></div>
+    <div class="panel" role="tabpanel" aria-live="polite">
+      <div class="orbe" id="orbe"></div>
+      <div>
+        <h3 id="pNombre"></h3>
+        <p id="pTexto"></p>
+        <p class="dato" id="pDato"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="luna">
+    <h2>Fases de la Luna</h2>
+    <p>Desliza para recorrer un mes lunar completo.</p>
+    <div class="luna" style="margin-top:1.5rem">
+      <svg viewBox="0 0 180 180" role="img" aria-label="Fase lunar actual">
+        <circle cx="90" cy="90" r="80" fill="#1d2455"/>
+        <g id="lit"><path id="luzLuna" fill="#f3ecd8"/></g>
+        <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(243,236,216,.25)"/>
+      </svg>
+      <div class="control">
+        <div id="nombreFase"></div>
+        <input type="range" id="fase" min="0" max="100" value="50" aria-label="Día del ciclo lunar">
+        <p id="diaFase" style="color:var(--niebla)"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="bitacora">
+    <h2>Tu bitácora de observación</h2>
+    <p>Anota lo que viste esta noche. Se guarda en tu navegador.</p>
+    <div class="form">
+      <input id="entrada" type="text" placeholder="Ej.: Vi Júpiter junto a la Luna" aria-label="Nueva observación" maxlength="120">
+      <button class="boton" id="agregar">Guardar observación</button>
+    </div>
+    <ul id="lista"></ul>
+  </section>
+</main>
+
+<footer>Santiago Castro Caicedo · 20252005138</footer>
+
+<script>
+/* ---------- ESTRELLAS (canvas con parallax) ---------- */
+const lienzo = document.getElementById('estrellas');
+const ctx = lienzo.getContext('2d');
+const reducir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let estrellas = [], mx = 0, my = 0;
+
+function crearEstrellas(){
+  lienzo.width = innerWidth; lienzo.height = innerHeight;
+  const n = Math.min(220, Math.floor(innerWidth * innerHeight / 7000));
+  estrellas = Array.from({length:n}, () => ({
+    x:Math.random()*lienzo.width, y:Math.random()*lienzo.height,
+    r:Math.random()*1.4+.3, p:Math.random()*.04+.005, f:Math.random()*6.28
+  }));
+}
+function dibujar(t=0){
+  ctx.clearRect(0,0,lienzo.width,lienzo.height);
+  for(const e of estrellas){
+    const brillo = reducir ? .8 : .5 + .5*Math.sin(t/900 + e.f);
+    ctx.globalAlpha = .35 + brillo*.65;
+    ctx.fillStyle = '#f3ecd8';
+    ctx.beginPath();
+    ctx.arc(e.x + mx*e.p*40, e.y + my*e.p*40, e.r, 0, 6.28);
+    ctx.fill();
+  }
+  if(!reducir) requestAnimationFrame(dibujar);
+}
+addEventListener('resize', () => { crearEstrellas(); if(reducir) dibujar(); });
+addEventListener('mousemove', ev => { mx = ev.clientX/innerWidth - .5; my = ev.clientY/innerHeight - .5; });
+crearEstrellas(); dibujar();
+
+/* ---------- PLANETAS (pestañas) ---------- */
+const planetas = [
+  {n:'Mercurio', c:'radial-gradient(circle at 35% 30%,#c9c2b8,#6f6a63)',
+   t:'El más cercano al Sol. Solo se ve cerca del horizonte, poco después del atardecer o antes del amanecer.',
+   d:'Su año dura solo 88 días terrestres.'},
+  {n:'Venus', c:'radial-gradient(circle at 35% 30%,#fff1c4,#d49a3a)',
+   t:'Es el punto más brillante del cielo después de la Luna. No parpadea como las estrellas.',
+   d:'Su día es más largo que su año.'},
+  {n:'Marte', c:'radial-gradient(circle at 35% 30%,#ff9d6b,#8e2f1a)',
+   t:'Se ve como un punto anaranjado y firme. Es más fácil de reconocer cuando está cerca de la Tierra.',
+   d:'Tiene el volcán más alto conocido: el Monte Olimpo.'},
+  {n:'Júpiter', c:'radial-gradient(circle at 35% 30%,#f2d9b5,#a8673a)',
+   t:'Brilla con luz blanca y estable. Con unos binoculares puedes distinguir sus cuatro lunas mayores.',
+   d:'Gira sobre sí mismo en unas 10 horas.'},
+  {n:'Saturno', c:'radial-gradient(circle at 35% 30%,#f6e4a8,#b08d3f)',
+   t:'Luce amarillento y tranquilo. Con un telescopio pequeño se ven sus anillos.',
+   d:'Es menos denso que el agua.'}
+];
+const contTabs = document.querySelector('.tabs');
+planetas.forEach((p,i) => {
+  const b = document.createElement('button');
+  b.className = 'tab'; b.type = 'button'; b.role = 'tab'; b.textContent = p.n;
+  b.addEventListener('click', () => elegir(i));
+  contTabs.appendChild(b);
+});
+function elegir(i){
+  const p = planetas[i];
+  [...contTabs.children].forEach((b,j) => b.setAttribute('aria-selected', j===i));
+  document.getElementById('orbe').style.background = p.c;
+  document.getElementById('pNombre').textContent = p.n;
+  document.getElementById('pTexto').textContent = p.t;
+  document.getElementById('pDato').textContent = p.d;
+}
+elegir(3);
+
+/* ---------- LUNA ---------- */
+const rango = document.getElementById('fase');
+function pintarLuna(){
+  const dia = +rango.value / 100 * 29.5;      // 0 a 29.5 días
+  const p = dia / 29.5;                        // 0 nueva, .5 llena
+  const k = Math.cos(p * 2 * Math.PI);         // 1 nueva, -1 llena
+  const rx = Math.abs(k) * 80;
+  const barrido = k > 0 ? 0 : 1;
+  document.getElementById('luzLuna').setAttribute('d',
+    `M90 10 A80 80 0 0 1 90 170 A${rx} 80 0 0 ${barrido} 90 10 Z`);
+  document.getElementById('lit').setAttribute('transform', p > .5 ? 'translate(180,0) scale(-1,1)' : '');
+  const nombres = [[.03,'Luna nueva'],[.22,'Creciente'],[.28,'Cuarto creciente'],[.47,'Gibosa creciente'],
+    [.53,'Luna llena'],[.72,'Gibosa menguante'],[.78,'Cuarto menguante'],[.97,'Menguante'],[1.01,'Luna nueva']];
+  document.getElementById('nombreFase').textContent = nombres.find(x => p < x[0])[1];
+  document.getElementById('diaFase').textContent = `Día ${Math.round(dia)} del ciclo de 29,5 días`;
+}
+rango.addEventListener('input', pintarLuna); pintarLuna();
+
+/* ---------- BITÁCORA (localStorage) ---------- */
+const lista = document.getElementById('lista');
+const entrada = document.getElementById('entrada');
+let notas = [];
+try { notas = JSON.parse(localStorage.getItem('bitacora') || '[]'); } catch(e){ notas = []; }
+
+function guardar(){ try { localStorage.setItem('bitacora', JSON.stringify(notas)); } catch(e){} }
+function mostrar(){
+  lista.innerHTML = '';
+  if(!notas.length){
+    const v = document.createElement('li'); v.className = 'vacio';
+    v.textContent = 'Aún no hay observaciones. Escribe la primera arriba.';
+    lista.appendChild(v); return;
+  }
+  notas.forEach((n,i) => {
+    const li = document.createElement('li');
+    const s = document.createElement('span'); s.textContent = n;
+    const b = document.createElement('button'); b.textContent = 'Borrar';
+    b.addEventListener('click', () => { notas.splice(i,1); guardar(); mostrar(); });
+    li.append(s,b); lista.appendChild(li);
+  });
+}
+function agregar(){
+  const t = entrada.value.trim();
+  if(!t){ entrada.focus(); return; }
+  notas.unshift(t); entrada.value = ''; guardar(); mostrar();
+}
+document.getElementById('agregar').addEventListener('click', agregar);
+entrada.addEventListener('keydown', e => { if(e.key === 'Enter') agregar(); });
+mostrar();
+</script>
+</body>
+</html>
